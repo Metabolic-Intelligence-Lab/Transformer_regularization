@@ -1,0 +1,28 @@
+{
+  "dataset": "HuggingFaceFW/fineweb-edu",
+  "config": "sample-10BT",
+  "revision": "87f09149ef4734204d70ed1d046ddc9ca3f2b8f9",
+  "tokenizer": "gpt2",
+  "eot": 50256,
+  "split_rule": "doc index i: i%50==0 val, i%50==1 test, else train",
+  "docs_streamed": 161000,
+  "docs": {
+    "train": 154414,
+    "val": 3220,
+    "test": 3220
+  },
+  "files": {
+    "train": {
+      "tokens": 160000000,
+      "sha256": "8e4488f16d755ef4c5a25a4a89b0465ad49f592bdbc0c0ec3feb3bbcf3a35bd8"
+    },
+    "val": {
+      "tokens": 3316294,
+      "sha256": "217285c66cfcfd5792bf596196f73b183317a6dc3753ddb97a3225c7686d2b3e"
+    },
+    "test": {
+      "tokens": 3297840,
+      "sha256": "8c56e909ff8fad74003041f884eafa1a092a7c283c021b4d6e5c9eddcc1e3348"
+    }
+  }
+}

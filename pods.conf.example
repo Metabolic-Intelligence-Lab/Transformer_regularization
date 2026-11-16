@@ -1,0 +1,4 @@
+# One pod per line: <tag> <ip> <ssh-port> <results kind>; pod_p1.sh writes these lines and a
+# '# <tag> id=<pod id> ...' comment. Copy to pods.conf (git-ignored).
+P1_xs   1.2.3.4  10001  dc
+P2_s    1.2.3.5  10002  dc
