@@ -8,6 +8,9 @@ in their decay rule and wall-clock comparisons are not confounded by kernels:
     'coupled'   p <- p * (1 - lr_t * wd), then the Adam update     (= torch.optim.AdamW)
     'cautious'  p <- p - lr_t * (u + wd * 1[u * p >= 0] * p)       (Cautious Weight Decay,
                 Chen et al., ICLR 2026: decay only coordinates whose update agrees in sign)
+    'anticautious'  the complement: decay only coordinates with u * p < 0          (control)
+    'random'    decay a random fraction mask_p of the coordinates, redrawn every step  (control;
+                the generator is seeded from torch.initial_seed(), so a run is reproducible)
 
   post-step decay (`post_step_decay`, applied after optimizer.step on the decay scope)
     'constant'        p <- p - rho * p                                  lr-independent
@@ -28,18 +31,27 @@ import torch
 from torch.optim import Optimizer
 
 POST_STEP_MODES = ('constant', 'constant_fair', 'constant_huber', 'coupled_fair')
-IN_STEP_MODES = ('none', 'coupled', 'cautious')
+IN_STEP_MODES = ('none', 'coupled', 'cautious', 'anticautious', 'random')
 
 
 class DecayAdamW(Optimizer):
     """Adam with a decoupled in-step decay rule chosen per parameter group ('mode')."""
 
     def __init__(self, params, lr=1e-3, betas=(0.9, 0.95), eps=1e-8, weight_decay=0.0,
-                 mode='coupled'):
+                 mode='coupled', mask_p=0.4):
         if mode not in IN_STEP_MODES:
             raise ValueError(f"in-step mode must be one of {IN_STEP_MODES}, got {mode!r}")
         super().__init__(params, dict(lr=lr, betas=betas, eps=eps,
-                                      weight_decay=weight_decay, mode=mode))
+                                      weight_decay=weight_decay, mode=mode, mask_p=mask_p))
+        self._gen = {}      # one generator per device for the 'random' mask
+
+    def _rand(self, p):
+        g = self._gen.get(p.device)
+        if g is None:
+            g = torch.Generator(device=p.device)
+            g.manual_seed(torch.initial_seed() % (2 ** 63) + 7919)
+            self._gen[p.device] = g
+        return torch.rand(p.shape, generator=g, device=p.device)
 
     @torch.no_grad()
     def step(self, closure=None):
@@ -65,9 +77,14 @@ class DecayAdamW(Optimizer):
                 bc1 = 1 - beta1 ** st['step']
                 bc2 = 1 - beta2 ** st['step']
                 denom = (v.sqrt() / math.sqrt(bc2)).add_(group['eps'])
-                if mode == 'cautious' and wd != 0:
+                if mode in ('cautious', 'anticautious', 'random') and wd != 0:
                     u = (m / bc1) / denom
-                    mask = (u * p >= 0).to(p.dtype)
+                    if mode == 'cautious':
+                        mask = (u * p >= 0).to(p.dtype)
+                    elif mode == 'anticautious':
+                        mask = (u * p < 0).to(p.dtype)
+                    else:
+                        mask = (self._rand(p) < group['mask_p']).to(p.dtype)
                     p.add_(u + wd * mask * p, alpha=-lr)
                     continue
                 if mode == 'coupled' and wd != 0:

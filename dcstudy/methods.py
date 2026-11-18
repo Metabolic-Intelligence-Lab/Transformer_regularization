@@ -16,6 +16,9 @@ METHODS = {
     'AdamW+dropout': dict(family='adam', mode='coupled',  post=None,             hp=['wd', 'dropout']),
     'AdamW+EMA':     dict(family='adam', mode='coupled',  post=None,             hp=['wd', 'ema']),
     'CWD':           dict(family='adam', mode='cautious', post=None,             hp=['wd']),
+    # controls for CWD (post-registration, protocol P3): same core, a different decay mask
+    'AntiCWD':       dict(family='adam', mode='anticautious', post=None,         hp=['wd']),
+    'RandWD':        dict(family='adam', mode='random',   post=None,             hp=['wd']),
     'Const':         dict(family='adam', mode='none',     post='constant',       hp=['rho']),
     'Const-Fair':    dict(family='adam', mode='none',     post='constant_fair',  hp=['rho', 'delta']),
     'Const-Huber':   dict(family='adam', mode='none',     post='constant_huber', hp=['rho', 'delta']),

@@ -3,7 +3,7 @@
     python analysis/p1_figures.py [--analysis results/p1_analysis.json] [--results results/dc]
                                   [--replicate results/dc_replicate_S_A4500] [--out paper/figures]
 
-F2  paired contrasts with AdamW in R16 and R1 (XS), with bootstrap CI95
+F2  paired contrasts with AdamW in R16 and R1 (XS), with t CI95
 F3  regime effect, (method - AdamW in R16) - (method - AdamW in R1), with CI95
 F4  validation-loss curves of the final runs in R16 (XS and S), best checkpoint marked
 F5  contrasts with AdamW at S (R16), with CI95
@@ -144,7 +144,7 @@ def fig_contrasts_two_arms(res, out):
         for i, m in enumerate(methods):
             if m not in arm:
                 continue
-            lo, hi = arm[m]['boot_ci']
+            lo, hi = arm[m]['t_ci']
             ax.plot([lo, hi], [y[i] + off] * 2, color=col, linewidth=1.6, solid_capstyle='butt')
             ax.plot(arm[m]['diff'], y[i] + off, 'o', color=col, markersize=5.5,
                     markeredgecolor='white', markeredgewidth=0.8)
@@ -153,9 +153,9 @@ def fig_contrasts_two_arms(res, out):
     ax.set_yticklabels(methods)
     ax.invert_yaxis()
     ax.set_xlabel('Test loss difference from AdamW (nats), best-validation checkpoint')
-    ax.legend(loc='upper right', handlelength=1.6)
+    ax.legend(loc='upper center', bbox_to_anchor=(0.5, -0.16), ncol=2, handlelength=1.6)
     tidy(ax)
-    ax.text(0.0, 1.02, 'XS, 30M parameters. Bars: bootstrap CI95 of the paired difference.',
+    ax.text(0.0, 1.02, 'XS, 30M parameters. Bars: t CI95 of the paired difference.',
             transform=ax.transAxes, color=INK2, fontsize=7.5)
     save(fig, out, 'F2_contrasts_r16_r1')
 
@@ -167,7 +167,7 @@ def fig_regime_effect(res, out):
     fig, ax = plt.subplots(figsize=(5.2, 3.6))
     ax.axvline(0, color=INK2, linewidth=0.8)
     for i, r in enumerate(rows):
-        lo, hi = r['boot_ci']
+        lo, hi = r['t_ci']
         ax.plot([lo, hi], [i, i], color=SERIES[0], linewidth=1.6, solid_capstyle='butt')
         ax.plot(r['regime_effect'], i, 'o', color=SERIES[0], markersize=5.5,
                 markeredgecolor='white', markeredgewidth=0.8)
@@ -177,7 +177,7 @@ def fig_regime_effect(res, out):
     ax.set_xlabel('Regime effect (nats): (method − AdamW in R16) − (method − AdamW in R1)')
     tidy(ax)
     ax.text(0.0, 1.02, 'Positive: the method loses ground to AdamW when the data are repeated. '
-            'Bars: bootstrap CI95.', transform=ax.transAxes, color=INK2, fontsize=7.5)
+            'Bars: t CI95.', transform=ax.transAxes, color=INK2, fontsize=7.5)
     save(fig, out, 'F3_regime_effect')
 
 
@@ -227,7 +227,7 @@ def fig_s_contrasts(res, out):
     fig, ax = plt.subplots(figsize=(5.2, 2.2))
     ax.axvline(0, color=INK2, linewidth=0.8)
     for i, r in enumerate(rows):
-        lo, hi = r['boot_ci']
+        lo, hi = r['t_ci']
         ax.plot([lo, hi], [i, i], color=SERIES[0], linewidth=1.6, solid_capstyle='butt')
         ax.plot(r['diff'], i, 'o', color=SERIES[0], markersize=5.5, markeredgecolor='white',
                 markeredgewidth=0.8)
@@ -236,7 +236,7 @@ def fig_s_contrasts(res, out):
     ax.invert_yaxis()
     ax.set_xlabel('Test loss difference from AdamW (nats), S, R16, best-validation checkpoint')
     tidy(ax)
-    ax.text(0.0, 1.04, 'S, 51.5M parameters, n = 3 seeds. Bars: bootstrap CI95.',
+    ax.text(0.0, 1.04, 'S, 51.5M parameters, n = 3 seeds. Bars: t CI95.',
             transform=ax.transAxes, color=INK2, fontsize=7.5)
     save(fig, out, 'F5_s_contrasts')
 

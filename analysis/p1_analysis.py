@@ -27,7 +27,7 @@ import numpy as np
 from scipy import stats
 
 sys.path.insert(0, os.path.dirname(os.path.abspath(__file__)))
-from stats_utils import paired_ttest, bootstrap_ci, holm  # noqa: E402
+from stats_utils import paired_ttest, bootstrap_ci, holm, t_ci, welch_ci  # noqa: E402
 
 MARGIN = 0.01          # TOST margin, nats
 N_BOOT = 10_000
@@ -110,6 +110,7 @@ def contrasts(arm, metric):
         rows.append(dict(method=m, n_pairs=n, seeds=seeds, mean=float(np.mean(a)),
                          sd=float(np.std(a, ddof=1)) if n > 1 else float('nan'),
                          diff=diff, t=t, p=p, boot_ci=[lo, hi],
+                         t_ci=list(t_ci(np.asarray(a) - np.asarray(b))),
                          tost_equivalent=eq, tost_p=p_tost, tost_ci=[tlo, thi]))
     rej = holm([r['p'] for r in rows], alpha=ALPHA) if rows else []
     adj = holm_adjusted([r['p'] for r in rows]) if rows else []
@@ -178,7 +179,7 @@ def regime_effect(r16, r1, metric='test_loss', n_boot=N_BOOT):
         else:
             lo = hi = float('nan')
         out.append(dict(method=m, diff_r16=float(d16.mean()), diff_r1=float(d1.mean()),
-                        regime_effect=eff, boot_ci=[lo, hi]))
+                        regime_effect=eff, boot_ci=[lo, hi], t_ci=list(welch_ci(d16, d1))))
     return out
 
 
@@ -249,7 +250,8 @@ def sensitivity(results_dir, loaded):
                 t, p, diff, n = paired_ttest(a, b)
                 lo, hi = bootstrap_ci(a, b, n_boot=N_BOOT, seed=0)
                 entry['standard_vs_pre'] = dict(
-                    diff=diff, p=p, boot_ci=[lo, hi], n_pairs=n, seeds=seeds,
+                    diff=diff, p=p, boot_ci=[lo, hi], t_ci=list(t_ci(np.asarray(a) - np.asarray(b))),
+                    n_pairs=n, seeds=seeds,
                     same_winner=with_finals[STANDARD]['winner']['hp'] == pre[STANDARD]['winner']['hp'])
         out.append(entry)
     return out

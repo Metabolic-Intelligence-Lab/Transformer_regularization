@@ -6,7 +6,9 @@ data are scarce and must be repeated. Thirteen methods are compared on a GPT-2-s
 repeated for 16 epochs, and 159M unique tokens seen once. Every method is tuned at the same cost
 with the learning rate always in the grid, the final runs share the same seeds, and the analysis was
 fixed before the runs. No new method is proposed. A second protocol (P2), also fixed before its
-runs, tests the one post-registration finding (cautious weight decay) on held-out seeds.
+runs, tests the one post-registration finding (cautious weight decay) on held-out seeds. A third
+protocol (P3) tests whether that gain depends on the sign rule, with a random and a complementary
+decay mask, and re-tunes three methods in the single-pass arm.
 
 Authors: Giuseppe Maulucci (corresponding, ORCID 0000-0002-2154-319X), Tommaso Marchetti,
 Marco De Spirito — Università Cattolica del Sacro Cuore, Rome.
@@ -21,7 +23,10 @@ Marco De Spirito — Università Cattolica del Sacro Cuore, Rome.
 | `dc_grid.py` | One tuning search: learning rate × method hyperparameter on the tuning seed, then the finals on fresh seeds; every run is journaled and replayed on re-invocation |
 | `p1_matrix.py` | The protocol driver: grids, edge rule and stacking methods applied mechanically for the arms R16, R1 and the S confirmation |
 | `analysis/p1_analysis.py` | The pre-registered analysis: paired contrasts against AdamW, Holm, bootstrap intervals, paired TOST, regime effect, sensitivity section; writes `results/p1_report.md` |
+| `protocols/P3_controls.md` | The protocol of the mask controls (RandWD, AntiCWD) and of the re-tuned single-pass arm. Fixed before its runs. |
 | `analysis/p2_analysis.py` | The analysis of protocol P2; writes `results/p2_analysis.json` and the P2 table of the paper |
+| `analysis/p3_analysis.py` | The analysis of protocol P3; writes `results/p3_analysis.json` and the two P3 tables of the paper |
+| `analysis/p1_main_tables.py` | The main result tables of the paper (`paper/jmlr/generated/tab_*.tex`) |
 | `analysis/p1_figures.py`, `analysis/p1_latex_tables.py` | The figures and the appendix tables of the paper |
 | `analysis/p1_gate.py`, `analysis/stats_utils.py` | Pilot gate; shared statistics |
 | `experiment_utils.py` | Shared pieces used by `dcstudy`: `EarlyStopping` with verified restore, `RunJournal` |
@@ -30,7 +35,7 @@ Marco De Spirito — Università Cattolica del Sacro Cuore, Rome.
 | `results/p1_report.md`, `results/P1_RESULTS.md` | Generated tables; written summary of the findings |
 | `results/dc_replicate_S_A4500/` | An independent second run of the S phase on different hardware |
 | `tests/` | CPU tests of the training loop, the grid driver, the gate and the analysis (`pytest -q`) |
-| `pod_*.sh`, `pod_*.py` | RunPod launch and power scripts (`pod_launch_P2.sh` runs the P2 blocks) |
+| `pod_*.sh`, `pod_*.py` | RunPod launch and power scripts (`pod_launch_P2.sh` and `pod_launch_P3.sh` run the P2 and P3 blocks; `pod_https.py` drives a pod over HTTPS only) |
 | `paper/jmlr/` | The manuscript (LaTeX, JMLR style), its figures and generated tables; `build.sh` builds it with tectonic |
 
 ## Reproduce
@@ -56,12 +61,14 @@ python p1_matrix.py --phase s                # AdamW + the four best XS methods 
 # tables and statistics
 python analysis/p1_analysis.py
 python analysis/p2_analysis.py
+python analysis/p3_analysis.py
 ```
 
 A single run takes 2,432 optimizer steps over 159.4M tokens: about 16 minutes at XS and 21 minutes
 at S on an RTX 3090. The registered protocol took about 110 GPU-hours on consumer GPUs; with the
 post-registration runs and protocol P2 (`protocols/P2_cwd_confirmation.md`, analysed by
-`python analysis/p2_analysis.py`) the study took about 170 GPU-hours.
+`python analysis/p2_analysis.py`) the study took about 170 GPU-hours. Protocol P3 (`protocols/P3_controls.md`) added two mask
+controls for cautious weight decay at S and a re-tuned single-pass arm at XS.
 
 On RunPod: `RUNPOD_API_KEY=... AUTOSTOP=1 bash pod_p1.sh <tag> pod_launch_P1_matrix.sh XS all r16 r1`
 creates a pod, uploads the corpus, launches the phases in tmux and stops the pod when they end.

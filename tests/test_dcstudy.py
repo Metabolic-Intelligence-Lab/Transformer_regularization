@@ -132,6 +132,7 @@ CFG = dict(size='tiny', seed=42, epochs=2, block_size=32, batch_seqs=8, micro_se
 HP = {
     'Baseline': {'lr': 3e-3}, 'AdamW': {'lr': 3e-3, 'wd': 0.1},
     'AdamW+dropout': {'lr': 3e-3, 'wd': 0.1, 'dropout': 0.1}, 'CWD': {'lr': 3e-3, 'wd': 0.1},
+    'AntiCWD': {'lr': 3e-3, 'wd': 0.1}, 'RandWD': {'lr': 3e-3, 'wd': 0.1},
     'AdamW+EMA': {'lr': 3e-3, 'wd': 0.1, 'ema': 0.9},
     'Const': {'lr': 3e-3, 'rho': 1e-4}, 'Const-Fair': {'lr': 3e-3, 'rho': 1e-4, 'delta': 0.1},
     'Const-Huber': {'lr': 3e-3, 'rho': 1e-4, 'delta': 0.1},
@@ -265,3 +266,27 @@ def test_p2_holm_adjustment():
     m = importlib.util.module_from_spec(spec); spec.loader.exec_module(m)
     assert m.holm([0.055, 0.168]) == [0.11, 0.168]
     assert m.holm([0.3, 0.01]) == [0.3, 0.02]
+
+
+def _one_step(mode, seed=0, wd=0.5, **kw):
+    torch.manual_seed(seed)
+    w = torch.nn.Parameter(torch.randn(256, 64))
+    g = torch.randn_like(w)
+    p0 = w.detach().clone()
+    opt = DecayAdamW([{'params': [w], 'weight_decay': wd}], lr=1e-2, mode=mode, **kw)
+    w.grad = g.clone()
+    opt.step()
+    return p0, w.detach().clone(), g
+
+
+def test_cwd_control_masks():
+    p0, none_w, _ = _one_step('cautious', wd=0.0)          # pure Adam step, no decay anywhere
+    _, c, _ = _one_step('cautious')
+    _, a, _ = _one_step('anticautious')
+    _, r, _ = _one_step('random', mask_p=0.4)
+    dec = lambda x: (none_w - x).abs() > 1e-6                          # coordinates that were decayed
+    dc, da, dr = dec(c), dec(a), dec(r)
+    assert not (dc & da).any() and (dc | da).float().mean() > 0.99   # the two masks partition the coordinates
+    assert abs(dr.float().mean().item() - 0.4) < 0.03                 # random mask: the stated fraction
+    _, r2, _ = _one_step('random', mask_p=0.4)
+    assert torch.equal(r, r2)                                         # reproducible under the same seed

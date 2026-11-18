@@ -80,3 +80,5 @@ paper/jmlr/main.pdf
 paper/jmlr/cover_letter/cover_letter.pdf
 paper/jmlr/**/*.log
 paper/jmlr/**/*.aux
+pods_https.json
+pull_*/

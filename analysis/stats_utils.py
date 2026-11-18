@@ -31,6 +31,30 @@ def paired_ttest(a, b):
     return float(t), float(p), float(d.mean()), n
 
 
+def t_ci(d, alpha=0.05):
+    """t-based CI of the mean of the paired differences d (the reported interval since 2026-11-16:
+    a percentile bootstrap over 2 to 6 seeds under-covers)."""
+    d = np.asarray(d, dtype=float)
+    n = d.size
+    if n < 2:
+        return float('nan'), float('nan')
+    half = stats.t.ppf(1 - alpha / 2, n - 1) * d.std(ddof=1) / np.sqrt(n)
+    return float(d.mean() - half), float(d.mean() + half)
+
+
+def welch_ci(x, y, alpha=0.05):
+    """Welch t-based CI of mean(x) - mean(y) for two independent samples."""
+    x, y = np.asarray(x, dtype=float), np.asarray(y, dtype=float)
+    if x.size < 2 or y.size < 2:
+        return float('nan'), float('nan')
+    vx, vy = x.var(ddof=1) / x.size, y.var(ddof=1) / y.size
+    se = np.sqrt(vx + vy)
+    df = (vx + vy) ** 2 / (vx ** 2 / (x.size - 1) + vy ** 2 / (y.size - 1)) if se > 0 else 1.0
+    half = stats.t.ppf(1 - alpha / 2, df) * se
+    m = x.mean() - y.mean()
+    return float(m - half), float(m + half)
+
+
 def bootstrap_ci(a, b=None, statistic='mean_diff', n_boot=10000, alpha=0.05, seed=0):
     """Percentile bootstrap CI, for the paired difference by default.
 
