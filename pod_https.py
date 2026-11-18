@@ -186,7 +186,7 @@ def create(tag):
 
 def repo_tarball(extra_globs):
     files = subprocess.run(['git', 'ls-files', 'dcstudy', 'analysis', 'tests', 'dc_grid.py', 'experiment_utils.py',
-                            'pod_common.sh', 'pod_launch_dc.sh', 'pod_launch_P3.sh', 'pytest.ini',
+                            'pod_common.sh', 'pod_launch_dc.sh', 'pod_launch_P3.sh', 'pod_launch_P3x.sh', 'pytest.ini',
                             'requirements.txt'], capture_output=True, text=True, check=True).stdout.split()
     import glob
     for g in extra_globs:
