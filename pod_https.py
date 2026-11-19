@@ -186,13 +186,16 @@ def create(tag):
 
 def repo_tarball(extra_globs):
     files = subprocess.run(['git', 'ls-files', 'dcstudy', 'analysis', 'tests', 'dc_grid.py', 'experiment_utils.py',
-                            'pod_common.sh', 'pod_launch_dc.sh', 'pod_launch_P3.sh', 'pod_launch_P3x.sh', 'pytest.ini',
+                            'pod_common.sh', 'pod_launch_dc.sh', 'pod_launch_P3.sh', 'pod_launch_P3x.sh', 'pod_launch_P4.sh', 'pytest.ini',
                             'requirements.txt'], capture_output=True, text=True, check=True).stdout.split()
     import glob
     for g in extra_globs:
         files += glob.glob(g)
-    if subprocess.run(['git', 'status', '--porcelain', '--untracked-files=no'], capture_output=True, text=True).stdout.strip():
-        sys.exit('[LAUNCH] uncommitted changes: commit first')
+    # only the shipped files matter: the tarball is built from HEAD
+    dirty = subprocess.run(['git', 'status', '--porcelain', '--untracked-files=no', '--'] + sorted(set(files)),
+                           capture_output=True, text=True).stdout.strip()
+    if dirty:
+        sys.exit('[LAUNCH] uncommitted changes in shipped files: commit first\n' + dirty)
     buf = io.BytesIO()
     with tarfile.open(fileobj=buf, mode='w:gz') as tf:
         for f in sorted(set(files)):
@@ -207,7 +210,7 @@ def repo_tarball(extra_globs):
 
 def launch(tag, script, args):
     p = pod(tag)
-    journals = ['results/journal/dc_XS_D159.384M_E1_AdamW*.jsonl']
+    journals = ['results/journal/dc_XS_D159.384M_E1_AdamW*.jsonl', 'results/journal/dc_M_D10M_E16_*_p2.jsonl']
     tgz, n = repo_tarball(journals)
     print(f'[LAUNCH] tarball {len(tgz) / 1e6:.2f} MB, {n} files')
     upload(p, tgz, 'regdecay_repo.tgz')

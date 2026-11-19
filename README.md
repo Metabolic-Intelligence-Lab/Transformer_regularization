@@ -26,6 +26,8 @@ Marco De Spirito — Università Cattolica del Sacro Cuore, Rome.
 | `protocols/P3_controls.md` | The protocol of the mask controls (RandWD, AntiCWD) and of the re-tuned single-pass arm. Fixed before its runs. |
 | `protocols/P3x_extension.md` | A post-registration sensitivity extension of P3, part B (wider ema and dropout grids, six seeds). Fixed before its runs. |
 | `analysis/p2_analysis.py` | The analysis of protocol P2; writes `results/p2_analysis.json` and the P2 table of the paper |
+| `protocols/P4_cwd_size.md` | Protocol P4: cautious weight decay against AdamW at 124.5M parameters with closed decay edges and six seeds. Fixed before its runs. |
+| `analysis/p4_analysis.py` | The analysis of protocol P4; writes `results/p4_analysis.json` and the P4 table of the paper |
 | `analysis/p3_analysis.py` | The analysis of protocol P3; writes `results/p3_analysis.json` and the P3 and P3x tables of the paper |
 | `analysis/p1_main_tables.py` | The main result tables of the paper (`paper/jmlr/generated/tab_*.tex`) |
 | `analysis/p1_figures.py`, `analysis/p1_latex_tables.py` | The figures and the appendix tables of the paper |
@@ -36,7 +38,7 @@ Marco De Spirito — Università Cattolica del Sacro Cuore, Rome.
 | `results/p1_report.md`, `results/P1_RESULTS.md` | Generated tables; written summary of the findings |
 | `results/dc_replicate_S_A4500/` | An independent second run of the S phase on different hardware |
 | `tests/` | CPU tests of the training loop, the grid driver, the gate and the analysis (`pytest -q`) |
-| `pod_*.sh`, `pod_*.py` | RunPod launch and power scripts (`pod_launch_P2.sh`, `pod_launch_P3.sh` and `pod_launch_P3x.sh` run the P2, P3 and P3x blocks; `pod_https.py` drives a pod over HTTPS only) |
+| `pod_*.sh`, `pod_*.py` | RunPod launch and power scripts (`pod_launch_P2.sh`, `pod_launch_P3.sh`, `pod_launch_P3x.sh` and `pod_launch_P4.sh` run the P2, P3, P3x and P4 blocks; `pod_https.py` drives a pod over HTTPS only) |
 | `paper/jmlr/` | The manuscript (LaTeX, JMLR style), its figures and generated tables; `build.sh` builds it with tectonic |
 
 ## Reproduce
@@ -70,7 +72,9 @@ at S on an RTX 3090. The registered protocol took about 110 GPU-hours on consume
 post-registration runs and protocol P2 (`protocols/P2_cwd_confirmation.md`, analysed by
 `python analysis/p2_analysis.py`) the study took about 170 GPU-hours. Protocol P3 (`protocols/P3_controls.md`) added two mask
 controls for cautious weight decay at S and a re-tuned single-pass arm at XS; its extension P3x
-(`protocols/P3x_extension.md`) widened two grids of that arm and added three seeds.
+(`protocols/P3x_extension.md`) widened two grids of that arm and added three seeds. Protocol P4 (`protocols/P4_cwd_size.md`)
+completed the 124.5M cell of P2 with closed decay edges and six seeds; its hypothesis was not
+confirmed (CWD - AdamW = -0.030 nats, CI95 [-0.064, +0.004], p = 0.073).
 
 On RunPod: `RUNPOD_API_KEY=... AUTOSTOP=1 bash pod_p1.sh <tag> pod_launch_P1_matrix.sh XS all r16 r1`
 creates a pod, uploads the corpus, launches the phases in tmux and stops the pod when they end.

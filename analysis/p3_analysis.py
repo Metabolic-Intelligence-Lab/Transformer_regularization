@@ -78,10 +78,18 @@ def holm(ps):
     return adj
 
 
+def end_stat(res, key):
+    """Mean over the final seeds of a logged statistic at the last evaluation (None if not logged)."""
+    vals = [f['curve'][-1].get(key) for f in res['finals'].values() if f.get('curve')]
+    vals = [v for v in vals if v is not None]
+    return float(np.mean(vals)) if vals else None
+
+
 def arm(res):
     f = finals(res)
     v = np.array(list(f.values()))
-    return {'winner': res['winner']['hp'], 'edge': res['winner']['edge'], 'tune_val': res['winner']['val_loss'],
+    return {'l2_end': end_stat(res, 'l2'), 'max_abs_end': end_stat(res, 'max_abs'),
+            'winner': res['winner']['hp'], 'edge': res['winner']['edge'], 'tune_val': res['winner']['val_loss'],
             'grid_size': len(res['grid']), 'test': f, 'mean': float(v.mean()), 'sd': float(v.std(ddof=1))}
 
 
