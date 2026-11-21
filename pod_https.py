@@ -32,6 +32,10 @@ GPUS = ['NVIDIA GeForce RTX 3090', 'NVIDIA RTX A4500', 'NVIDIA RTX A5000', 'NVID
         'NVIDIA RTX A6000', 'NVIDIA GeForce RTX 3090 Ti', 'NVIDIA L4', 'NVIDIA A40', 'NVIDIA L40S', 'NVIDIA L40', 'NVIDIA RTX 6000 Ada Generation',
         'NVIDIA RTX 4000 Ada Generation', 'NVIDIA RTX 5000 Ada Generation', 'NVIDIA A100 80GB PCIe',
         'NVIDIA A100-SXM4-80GB', 'NVIDIA H100 PCIe', 'NVIDIA H100 80GB HBM3']
+if os.environ.get('GPU_FIRST'):      # comma-separated GPU names to try before the default order
+    GPUS = os.environ['GPU_FIRST'].split(',') + [g for g in GPUS if g not in os.environ['GPU_FIRST'].split(',')]
+if os.environ.get('GPU_ONLY'):       # comma-separated GPU names: try these and no others
+    GPUS = os.environ['GPU_ONLY'].split(',')
 CLOUDS = os.environ.get('CLOUD', 'COMMUNITY,SECURE').split(',')
 STATE = 'pods_https.json'
 REVISION = '87f09149ef4734204d70ed1d046ddc9ca3f2b8f9'
@@ -186,7 +190,7 @@ def create(tag):
 
 def repo_tarball(extra_globs):
     files = subprocess.run(['git', 'ls-files', 'dcstudy', 'analysis', 'tests', 'dc_grid.py', 'experiment_utils.py',
-                            'pod_common.sh', 'pod_launch_dc.sh', 'pod_launch_P3.sh', 'pod_launch_P3x.sh', 'pod_launch_P4.sh', 'pytest.ini',
+                            'pod_common.sh', 'pod_launch_dc.sh', 'pod_launch_P3.sh', 'pod_launch_P3x.sh', 'pod_launch_P4.sh', 'pod_launch_P5.sh', 'pod_launch_P5x.sh', 'pytest.ini',
                             'requirements.txt'], capture_output=True, text=True, check=True).stdout.split()
     import glob
     for g in extra_globs:
@@ -210,7 +214,8 @@ def repo_tarball(extra_globs):
 
 def launch(tag, script, args):
     p = pod(tag)
-    journals = ['results/journal/dc_XS_D159.384M_E1_AdamW*.jsonl', 'results/journal/dc_M_D10M_E16_*_p2.jsonl']
+    journals = ['results/journal/dc_XS_D159.384M_E1_AdamW*.jsonl', 'results/journal/dc_M_D10M_E16_*_p2.jsonl',
+                'results/journal/dc_L_D10M_E16_*_p5x.jsonl', 'results/journal/dc_L_D10M_E16_*_p5hw.jsonl']
     tgz, n = repo_tarball(journals)
     print(f'[LAUNCH] tarball {len(tgz) / 1e6:.2f} MB, {n} files')
     upload(p, tgz, 'regdecay_repo.tgz')
@@ -220,7 +225,13 @@ def launch(tag, script, args):
         "J=$PWD; R=$J/regdecay_repo.tgz; ls -la $R; "
         "install -m 600 $J/regdecay_key /root/.runpod_key && rm -f $J/regdecay_key; "
         f"echo {p['id']} > /root/.runpod_pod_id; "
-        "cd /workspace && rm -rf Regularization_Decay && tar xzf $R && rm -f $R && cd Regularization_Decay && mkdir -p logs; "
+        # keep the pod's journals, results and logs across a relaunch: a journal is what lets a search resume
+        "cd /workspace && rm -rf .keep && mkdir .keep && "
+        "(for d in results/journal results/dc logs; do [ -d Regularization_Decay/$d ] && "
+        "mkdir -p .keep/$d && cp -a Regularization_Decay/$d/. .keep/$d/; done; true) && "
+        "rm -rf Regularization_Decay && tar xzf $R && rm -f $R && cd Regularization_Decay && "
+        "mkdir -p logs results/journal results/dc && "
+        "(for d in results/journal results/dc logs; do [ -d ../.keep/$d ] && cp -a ../.keep/$d/. $d/; done; true); "
         "(command -v tmux >/dev/null || (apt-get update -qq && apt-get install -y -qq tmux >/dev/null)); "
         f"tmux new-session -d -s run \"bash -c '"
         f"pip install -q \\\"transformers==4.46.3\\\" datasets scipy pytest 2>&1 | tail -2; "

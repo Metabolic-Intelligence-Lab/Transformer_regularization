@@ -30,6 +30,7 @@ SIZES = {
     'XS':   dict(n_layer=6, n_head=6, n_embd=384),                    # ~30.4M
     'S':    dict(n_layer=8, n_head=8, n_embd=512),                    # ~51.5M
     'M':    dict(n_layer=12, n_head=12, n_embd=768),                  # ~124.4M (GPT-2 small)
+    'L':    dict(n_layer=24, n_head=16, n_embd=1024),                 # ~355M (GPT-2 medium)
 }
 
 

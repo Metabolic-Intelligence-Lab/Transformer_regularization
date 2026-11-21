@@ -62,7 +62,7 @@ def grid_points(method, lrs, grid, fixed):
 
 def main(argv=None):
     ap = argparse.ArgumentParser(description=__doc__.split('\n\n')[0])
-    ap.add_argument('--size', default='S', choices=['tiny', 'XS', 'S', 'M'])
+    ap.add_argument('--size', default='S', choices=['tiny', 'XS', 'S', 'M', 'L'])
     ap.add_argument('--unique-tokens', type=int, default=20_000_000)
     ap.add_argument('--epochs', type=int, default=16)
     ap.add_argument('--method', required=True, choices=list(METHODS))

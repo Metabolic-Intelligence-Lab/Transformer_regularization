@@ -25,7 +25,7 @@ HAS_SF = importlib.util.find_spec('schedulefree') is not None
 
 # ----------------------------------------------------------------------------- model
 def test_parameter_counts_and_scope():
-    for size, n in (('XS', 30_357_504), ('S', 51_500_032), ('M', 124_475_904)):
+    for size, n in (('XS', 30_357_504), ('S', 51_500_032), ('M', 124_475_904), ('L', 354_871_296)):
         m = build(size)
         assert n_params(m) == n
         decay, no_decay = decay_scope(m)
