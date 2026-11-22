@@ -31,6 +31,8 @@ Marco De Spirito — Università Cattolica del Sacro Cuore, Rome.
 | `protocols/P5_cwd_355M.md` | Protocol P5: cautious weight decay against AdamW at 354.9M parameters, six fresh seeds. Fixed before its runs. |
 | `protocols/P5x_edges_355M.md` | A post-registration extension of P5 that closes both grid edges and checks the GPU model. Fixed before its runs. |
 | `analysis/p5_analysis.py` | The analysis of protocols P5 and P5x; writes `results/p5_analysis.json` and the P5 table of the paper |
+| `protocols/P6_cwd_124M_seeds.md` | Protocol P6: cautious weight decay against AdamW at 124.5M parameters on eighteen new seeds, at the P4 winners. Fixed before its runs. |
+| `analysis/p6_analysis.py` | The analysis of protocol P6; writes `results/p6_analysis.json` and the P6 table of the paper |
 | `analysis/p3_analysis.py` | The analysis of protocol P3; writes `results/p3_analysis.json` and the P3 and P3x tables of the paper |
 | `analysis/p1_main_tables.py` | The main result tables of the paper (`paper/jmlr/generated/tab_*.tex`) |
 | `analysis/p1_figures.py`, `analysis/p1_latex_tables.py` | The figures and the appendix tables of the paper |
@@ -41,7 +43,7 @@ Marco De Spirito — Università Cattolica del Sacro Cuore, Rome.
 | `results/p1_report.md`, `results/P1_RESULTS.md` | Generated tables; written summary of the findings |
 | `results/dc_replicate_S_A4500/` | An independent second run of the S phase on different hardware |
 | `tests/` | CPU tests of the training loop, the grid driver, the gate and the analysis (`pytest -q`) |
-| `pod_*.sh`, `pod_*.py` | RunPod launch and power scripts (`pod_launch_P2.sh`, `pod_launch_P3.sh`, `pod_launch_P3x.sh`, `pod_launch_P4.sh`, `pod_launch_P5.sh` and `pod_launch_P5x.sh` run the P2, P3, P3x, P4, P5 and P5x blocks; `pod_https.py` drives a pod over HTTPS only) |
+| `pod_*.sh`, `pod_*.py` | RunPod launch and power scripts (`pod_launch_P2.sh`, `pod_launch_P3.sh`, `pod_launch_P3x.sh`, `pod_launch_P4.sh`, `pod_launch_P5.sh`, `pod_launch_P5x.sh` and `pod_launch_P6.sh` run the P2, P3, P3x, P4, P5, P5x and P6 blocks; `pod_https.py` drives a pod over HTTPS only) |
 | `paper/jmlr/` | The manuscript (LaTeX, JMLR style), its figures and generated tables; `build.sh` builds it with tectonic |
 
 ## Reproduce
@@ -70,6 +72,7 @@ python analysis/p2_analysis.py
 python analysis/p3_analysis.py
 python analysis/p4_analysis.py
 python analysis/p5_analysis.py
+python analysis/p6_analysis.py
 ```
 
 A single run takes 2,432 optimizer steps over 159.4M tokens: about 16 minutes at XS and 21 minutes
@@ -83,6 +86,9 @@ confirmed (CWD - AdamW = -0.030 nats, CI95 [-0.064, +0.004], p = 0.073). Protoco
 (`protocols/P5_cwd_355M.md`) repeated the contrast at 354.9M parameters on seeds 3001-3006 and
 confirmed it (CWD - AdamW = -0.073 nats, CI95 [-0.083, -0.063], CWD lower on all six seeds); its
 extension P5x (`protocols/P5x_edges_355M.md`) closed both grid edges without moving either winner.
+Protocol P6 (`protocols/P6_cwd_124M_seeds.md`) repeated the 124.5M contrast of P4 on eighteen new
+seeds and confirmed it (CWD - AdamW = -0.022 nats, CI95 [-0.040, -0.003], p = 0.024, CWD lower on
+13 of 18 seeds).
 
 On RunPod: `RUNPOD_API_KEY=... AUTOSTOP=1 bash pod_p1.sh <tag> pod_launch_P1_matrix.sh XS all r16 r1`
 creates a pod, uploads the corpus, launches the phases in tmux and stops the pod when they end.
