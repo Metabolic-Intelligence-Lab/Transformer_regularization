@@ -89,6 +89,7 @@ def main():
 
     p2 = json.load(open('results/p2_analysis.json'))['H1']
     p4 = json.load(open('results/p4_analysis.json'))['H6']
+    p6 = json.load(open('results/p6_analysis.json'))['H8'] if os.path.exists('results/p6_analysis.json') else p4
     sizes = [{'size': '51.5M', 'protocol': 'P2 (H1)', 'diff_mean': p2['diff_mean'], 't_ci': p2['t_ci'], 'p': p2['p']},
              {'size': '124.5M', 'protocol': 'P4 (H6)', 'diff_mean': p4['diff_mean'], 't_ci': p4['t_ci'], 'p': p4['p']},
              {'size': '354.9M', 'protocol': 'P5 (H7)', 'diff_mean': h7['diff_mean'], 't_ci': h7['t_ci'], 'p': h7['p']}]
@@ -111,8 +112,8 @@ def main():
           f"$[{h7['t_ci'][0]:+.3f}, {h7['t_ci'][1]:+.3f}]$, $t_5 = {h7['t']:.2f}$, $p = {sci(h7['p'])}$; "
           f"CWD lower on {h7['cwd_lower_on']} of 6 seeds}} \\\\",
           f"\\multicolumn{{8}}{{@{{}}l}}{{Same contrast at 51.5M (P2): ${p2['diff_mean']:+.3f}$ "
-          f"$[{p2['t_ci'][0]:+.3f}, {p2['t_ci'][1]:+.3f}]$; at 124.5M (P4): ${p4['diff_mean']:+.3f}$ "
-          f"$[{p4['t_ci'][0]:+.3f}, {p4['t_ci'][1]:+.3f}]$}} \\\\",
+          f"$[{p2['t_ci'][0]:+.3f}, {p2['t_ci'][1]:+.3f}]$; at 124.5M (P6): ${p6['diff_mean']:+.3f}$ "
+          f"$[{p6['t_ci'][0]:+.3f}, {p6['t_ci'][1]:+.3f}]$}} \\\\",
           '\\bottomrule', '\\end{tabular}', '']
     os.makedirs(os.path.dirname(args.tex), exist_ok=True)
     open(args.tex, 'w').write('\n'.join(L))

@@ -93,7 +93,7 @@ def main():
                            ('2007--2024 (P6, H8)', h8, (f"{a['mean']:.3f}", f"{c['mean']:.3f}")),
                            ('2001--2024 (pooled)', pooled, ('', ''))):
         L.append(f"{name} & {r['n']} & {extra[0]} & {extra[1]} & ${r['diff_mean']:+.3f}$ & "
-                 f"$[{r['t_ci'][0]:+.3f}, {r['t_ci'][1]:+.3f}]$ & ${sci(r['p'])}$ & {r['cwd_lower_on']} \\\\")
+                 f"$[{r['t_ci'][0]:+.3f}, {r['t_ci'][1]:+.3f}]$ & {'---' if name.endswith('(pooled)') else '$' + sci(r['p']) + '$'} & {r['cwd_lower_on']} \\\\")
     L += ['\\bottomrule', '\\end{tabular}', '']
     os.makedirs(os.path.dirname(args.tex), exist_ok=True)
     open(args.tex, 'w').write('\n'.join(L))
